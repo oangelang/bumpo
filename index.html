@@ -63,15 +63,89 @@
       gap: 14px;
     }
 
+    .search-bar {
+      position: relative;
+    }
+
     .search input {
       width: 100%;
-      padding: 14px 18px;
+      padding: 14px 120px 14px 18px;
       border-radius: 999px;
       border: 1px solid var(--border);
       font-size: 1rem;
       color: var(--text);
       background: #fff;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    .ai-toggle {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ai-toggle::before {
+      content: "AI";
+      color: var(--blue);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+    }
+
+    .ai-results {
+      display: none;
+      border: 1px solid var(--border);
+      border-radius: 0 0 16px 16px;
+      padding: 14px 18px 16px;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+      margin-top: -8px;
+    }
+
+    .ai-results ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .ai-results li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .ai-results li::before {
+      content: "";
+      width: 16px;
+      height: 16px;
+      flex: 0 0 16px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%235f6368' stroke-width='1.5'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cline x1='10.5' y1='10.5' x2='14.5' y2='14.5'/%3E%3C/svg%3E");
+      background-size: 16px 16px;
+      background-repeat: no-repeat;
+      margin-top: 2px;
+    }
+
+    .search.ai-open .ai-results {
+      display: block;
+    }
+
+    .search.ai-open input {
+      border-radius: 16px 16px 0 0;
     }
 
     .buttons {
@@ -134,7 +208,13 @@
     </div>
 
     <div class="search">
-      <input type="text" value="New updates including girlfriend!" readonly />
+      <div class="search-bar">
+        <input type="text" value="New updates including girlfriend!" readonly id="search-input" />
+        <button class="ai-toggle" id="ai-toggle" type="button">AI Mode</button>
+      </div>
+      <div class="ai-results" id="ai-results">
+        <ul id="ai-list"></ul>
+      </div>
       <div class="buttons">
         <a href="https://oangelang.github.io/oratorio/">Google Search</a>
         <a href="https://photos.google.com/share/AF1QipNC09GjfySmfi2Kyxt4KKaLJ6PeMNHmOzyctOGXbkz8KRzokpU_1OI8OP3PZBhLeQ?key=U1VBcGh0X3ZvSjhLdjhjQm9TSjBzX2tNV2lIdFl3">I'm Feeling Lucky</a>
@@ -142,5 +222,123 @@
     </div>
 
   </main>
+  <script>
+    const aiToggle = document.getElementById('ai-toggle');
+    const search = document.querySelector('.search');
+    const aiList = document.getElementById('ai-list');
+    const searchInput = document.getElementById('search-input');
+    const defaultQuery = 'New updates including girlfriend!';
+    const aiQuery = 'Randomly generated date night ideas';
+
+    const ideas = [
+      'The \"Rush\" Rush: Wake up early for Broadway rush tickets; grab fancy coffee while you wait.',
+      'TKTS Roulette: Buy tickets for whatever musical tops the Times Square board.',
+      'Jazz & Supper: Dinner and a show at The Blue Note or Village Vanguard.',
+      'The \"Ellen\'s\" Experience: Breakfast at Ellen\'s Stardust Diner before a matinee.',
+      'Dress to the Nines: Wear your fanciest clothes for a tasting menu at a Michelin-star spot.',
+      'Off-Broadway Gem: See an experimental play at the Public Theater or Soho Rep.',
+      'Piano Bar Night: Go to Marie\'s Crisis and sing showtunes with the crowd.',
+      'Dessert Crawl: Skip dinner and hit three dessert spots in one night.',
+      'Gallery Hopping: Spend a Thursday evening in Chelsea walking gallery to gallery.',
+      'The Met Roof: Sunset drinks on the Met rooftop garden.',
+      'Shakespeare in the Park: Camp out or join the lottery for free tickets.',
+      'Speakeasy Tour: Find three hidden speakeasies in the Lower East Side.',
+      'Omakase Counter: Find a 12-seat sushi counter and let the chef choose.',
+      'Opera Night: Standing room at the Met Opera and dress up anyway.',
+      'Late Night Dim Sum: Chinatown at 11 PM for a chaotic feast.',
+      'Cabaret Night: See a Broadway star perform at 54 Below.',
+      'Food Market Bingo: Chelsea Market or Smorgasburg with a $20 weirdest-find challenge.',
+      'Architecture Walk: Walk the High Line end to end, stopping for gelato.',
+      'Comedy Cellar: Catch a stand-up set in Greenwich Village.',
+      'Bookstore Date: Get lost in the Strand and pick a book for each other.',
+      'The Cat Photoshoot: Build a set and take professional-grade cat photos.',
+      'Vinyl Listening Party: One album, no phones, lights low.',
+      'Cardboard Castle: Build a fort for the cat from delivery boxes.',
+      'Tiny Desk Marathon: Watch five NPR Tiny Desk concerts back-to-back.',
+      'Laser Maze: Build an obstacle course and guide the cat with a laser pointer.',
+      'Silent Disco: Same playlist, headphones on, dance quietly.',
+      'Catnip Happy Hour: You get wine or tea; the cat gets premium catnip.',
+      'Broadway Karaoke: Belt showtunes with lyric videos.',
+      'Instrument Swap: Try each other\'s instruments or learn a simple song.',
+      'Theme Dinner: Cook a meal inspired by a musical.',
+      'Custom Playlist: Build a road-trip playlist together.',
+      'The Floor is Lava: Navigate the room without touching the ground.',
+      'Blind Taste Test: Try three flavors blindfolded.',
+      'Puzzle & Podcast: Start a 1000-piece puzzle with a narrative podcast.',
+      'Cat Painting: Let the cat \"paint\" with treats and plastic wrap.',
+      'YouTube Learning: Learn a new language together for two hours.',
+      'Living Room Picnic: Floor blanket, finger foods, and music.',
+      'Write a Song: Create a parody song about the cat.',
+      'Video Game Co-op: Play a teamwork game like It Takes Two.',
+      'Spa Night: Face masks, foot soaks, ambient music.',
+      'Metro-North Roulette: Random Hudson Line stop and explore.',
+      'The Airport Date: Watch planes take off from a viewing spot.',
+      'Staycation: Book a hotel in a different NYC borough for one night.',
+      'Governors Island Glamping: Ferry over and spend the day biking.',
+      'Mystery Drive: Drive two hours in a random direction.',
+      'Food Tour Travel: Pick a country and eat in that neighborhood.',
+      'Hiking Date: Day hike at Bear Mountain.',
+      'Kayaking: Hudson River kayaking on a free-pier day.',
+      'Bike to the Beach: Ride to Fort Tilden or Jacob Riis Park.',
+      'Escape Room: Test communication skills in a timed room.',
+      'Trapeze School: Take a class on the West Side Highway.',
+      'Botanical Gardens: Visit the NY Botanical Garden in the Bronx.',
+      'Roosevelt Island Tram: Sunset ride and lighthouse walk.',
+      'Coney Island: Ride the Cyclone and eat Nathan\'s.',
+      'Storm King: Day trip to the sculpture park.',
+      'Camping: Pitch a tent at a campsite or in the living room.',
+      'City Scavenger Hunt: Find silly items around the city.',
+      'Helicopter Ride: Splurge on a 15-minute tour.',
+      'Ferry Hopping: Ride the NYC Ferry system all day.',
+      'Planning Session: Coffee shop planning for next year\'s dream trip.',
+      'Read-In: Read your own books on the couch, legs touching.',
+      'Powerpoint Night: Make silly 5-minute presentations.',
+      'Stargazing: Find a dark spot or a planetarium.',
+      'People Watching: Invent backstories in Washington Square Park.',
+      'Memory Lane: Scroll through phone photos from three years ago.',
+      'Bucket List: Write a couples bucket list for five years.',
+      'Bake Off: Bake the same cookies and judge the results.',
+      'Mixology Class: Make a cocktail or mocktail you\'ve never tried.',
+      'Stretch Session: Do a 20-minute yoga video together.',
+      'Breakfast for Dinner: Pancakes and eggs at 8 PM.',
+      'Rearrange the Furniture: Give the living room a fresh layout.',
+      'Deep Questions: Answer the 36 Questions to Fall in Love.',
+      'Video Message Time Capsule: Record a video for your future selves.',
+      'Walk the Bridge: Cross the Brooklyn or Williamsburg Bridge at night.',
+      'Library Date: Sit in the NY Public Library reading room.',
+      'Thrift Store Challenge: $10 each for the funniest gift.',
+      'Volunteer: Animal shelter or food bank shift together.',
+      'Review Your Year: Make a relationship \"wrapped\" summary.',
+      'Draw Each Other: Sketch portraits without looking down.',
+      'Zero-Tech Evening: Turn off Wi-Fi for three hours.'
+    ];
+
+    function pickIdeas(count) {
+      const pool = [...ideas];
+      const picks = [];
+      while (picks.length < count && pool.length) {
+        const index = Math.floor(Math.random() * pool.length);
+        picks.push(pool.splice(index, 1)[0]);
+      }
+      return picks;
+    }
+
+    function renderIdeas() {
+      aiList.innerHTML = '';
+      pickIdeas(3).forEach((idea) => {
+        const item = document.createElement('li');
+        item.textContent = idea;
+        aiList.appendChild(item);
+      });
+    }
+
+    renderIdeas();
+
+    aiToggle.addEventListener('click', () => {
+      renderIdeas();
+      const open = search.classList.toggle('ai-open');
+      searchInput.value = open ? aiQuery : defaultQuery;
+    });
+  </script>
 </body>
 </html>
